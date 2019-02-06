@@ -35,6 +35,8 @@ def create_database(name, all_currencies):
                        (currency['cc'], currency['txt'], currency['rate']))
         conn.commit()
 
+    conn.close()
+
 
 def main():
     all_currencies = get_currencies()
