@@ -40,20 +40,24 @@ def create_database(name, all_currencies):
 
     conn.close()
 
+
 def print_all(data):
     now = datetime.now()
     click.secho("Курс валют станом на {time}:\n".format(time=now.strftime('%d.%m.%Y %H:%M')), fg='blue', bold=True)
     for row in data:
         click.secho('{}\t{:40}\t{}'.format(*row), fg='cyan', bold=True)
 
+
 @click.group()
 @click.pass_context
 def main(ctx):
     all_currencies = get_currencies()
     create_database('currencies.db', all_currencies)
+
     ctx.obj = {
-        'database_name' : 'currencies.db'
+        'database_name': 'currencies.db'
     }
+
 
 @main.command()
 @click.pass_context
@@ -62,6 +66,19 @@ def show_all(ctx):
     cursor = conn.cursor()
     cursor.execute("""SELECT * FROM Currencies""")
     print_all(cursor.fetchall())
+    conn.close()
+
+
+@main.command()
+@click.option('--name', prompt='Код валюти')
+@click.pass_context
+def show_preffered(ctx, name):
+    conn = sqlite3.connect(ctx.obj.get('database_name'))
+    cursor = conn.cursor()
+    cursor.execute("""SELECT * FROM Currencies WHERE code=?""", (name,))
+    print_all(cursor.fetchall())
+    conn.close()
+
 
 if __name__ == "__main__":
     main()
