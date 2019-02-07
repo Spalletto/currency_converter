@@ -32,6 +32,7 @@ def create_database(name, all_currencies):
 
     cursor.execute("""DROP TABLE IF EXISTS Currencies;""")
     cursor.execute("""CREATE TABLE Currencies(code text, name text, price real)""")
+    cursor.execute("""INSERT INTO Currencies values(?,?,?)""", ('UAN', 'Українська гривня', 1))
 
     for currency in all_currencies:
         cursor.execute("""INSERT INTO Currencies values(?,?,?)""",
@@ -78,6 +79,24 @@ def show_preffered(ctx, name):
     cursor.execute("""SELECT * FROM Currencies WHERE code=?""", (name,))
     print_all(cursor.fetchall())
     conn.close()
+
+@main.command()
+@click.option('--first', prompt='Код валюти, яку ви маєте', default='UAN')
+@click.option('--amount', prompt='Кількість цієї валюти')
+@click.option('--second', prompt='Код валюти, яку бажаєте отримати')
+@click.pass_context
+def converter(ctx, first, amount, second):
+    conn = sqlite3.connect(ctx.obj.get('database_name'))
+    cursor = conn.cursor()
+
+    cursor.execute("""SELECT * FROM Currencies WHERE code=?""", (first,))
+    first_currency = cursor.fetchone()
+
+    cursor.execute("""SELECT * FROM Currencies WHERE code=?""", (second,))
+    second_currency = cursor.fetchone()
+
+    result = first_currency[2] * int(amount) / second_currency[2]
+    click.secho(f"{amount} {first_currency[0]} = {str(result)} {second_currency[0]}", fg='cyan')
 
 
 if __name__ == "__main__":
